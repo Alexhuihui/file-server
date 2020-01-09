@@ -29,4 +29,11 @@ public class File {
     private String md5;
     private Binary content; // 文件内容
     private String path; // 文件路径
+
+    public File(String originalFilename, String contentType, long size, Binary binary) {
+        this.name = originalFilename;
+        this.contentType = contentType;
+        this.size = size;
+        this.content = binary;
+    }
 }
