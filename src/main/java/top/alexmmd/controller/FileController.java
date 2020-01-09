@@ -8,16 +8,12 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.Binary;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 
 import top.alexmmd.domain.File;
@@ -78,21 +74,52 @@ public class FileController {
 
         File returnFile = null;
         try {
-            File f = new File(file.getOriginalFilename(), file.getContentType(), file.getSize(),
-                    new Binary(file.getBytes()));
+            // 把 MultipartFile 对象转换成 File 对象
+            File f = new File();
+            f.setName(file.getOriginalFilename());
+            f.setContentType(file.getContentType());
+            f.setSize(file.getSize());
+            f.setContent(new Binary(file.getBytes()));
             f.setMd5(MD5Util.getMD5(file.getInputStream()));
 
             log.info("<file-server>: upload file -> {}", file.getOriginalFilename() + file.getContentType() + file.getSize() + file.getBytes());
             log.info("<file-server>: upload file -> {}", f);
 
             returnFile = fileService.saveFile(f);
-            String path = "//" + serverAddress + ":" + serverPort + "/view/" + returnFile.getId();
+            String path = serverAddress + ":" + serverPort + "/view/" + returnFile.getId();
             return ResponseEntity.status(HttpStatus.OK).body(path);
 
         } catch (IOException | NoSuchAlgorithmException ex) {
             ex.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
         }
+    }
+
+    /**
+     * 上传接口
+     *
+     * @param files
+     * @return
+     */
+    @PostMapping("/uploads")
+    public RespEntity handleFileUpload(@RequestParam("files") MultipartFile[] files) {
+
+        try {
+            for (MultipartFile file : files) {
+                File f = new File(file.getOriginalFilename(), file.getContentType(), file.getSize(), new Binary(file.getBytes()));
+                f.setMd5(MD5Util.getMD5(file.getInputStream()));
+
+                log.info("<file-server>: upload file -> {}", file.getOriginalFilename() + file.getContentType() + file.getSize() + file.getBytes());
+                log.info("<file-server>: upload file -> {}", f);
+
+                fileService.saveFile(f);
+            }
+        } catch (IOException | NoSuchAlgorithmException ex) {
+            ex.printStackTrace();
+            return new RespEntity(500, "批量上传文件失败");
+        }
+
+        return new RespEntity(100, "批量上传文件成功");
     }
 
     /**
