@@ -1,8 +1,6 @@
 package top.alexmmd.domain;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 /**
  * @author 汪永晖

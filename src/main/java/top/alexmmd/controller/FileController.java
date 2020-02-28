@@ -3,6 +3,8 @@ package top.alexmmd.controller;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,7 +34,7 @@ public class FileController {
 
     private final FileService fileService;
 
-    @Value("${server.address}")
+    @Value("${server.add}")
     private String serverAddress;
 
     @Value("${server.port}")
@@ -70,7 +72,7 @@ public class FileController {
      * @return
      */
     @PostMapping("/upload")
-    public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file) {
+    public RespEntity handleFileUpload(@RequestParam("file") MultipartFile file) {
 
         File returnFile = null;
         try {
@@ -79,19 +81,21 @@ public class FileController {
             f.setName(file.getOriginalFilename());
             f.setContentType(file.getContentType());
             f.setSize(file.getSize());
+            f.setUploadDate(new Date());
             f.setContent(new Binary(file.getBytes()));
             f.setMd5(MD5Util.getMD5(file.getInputStream()));
-
-            log.info("<file-server>: upload file -> {}", file.getOriginalFilename() + file.getContentType() + file.getSize() + file.getBytes());
             log.info("<file-server>: upload file -> {}", f);
 
             returnFile = fileService.saveFile(f);
-            String path = serverAddress + ":" + serverPort + "/view/" + returnFile.getId();
-            return ResponseEntity.status(HttpStatus.OK).body(path);
+            String path = serverAddress + ":" + serverPort + "/files/" + returnFile.getId();
+            returnFile.setPath(path);
+            log.info("<file-server>: insert into file -> {}", returnFile);
+
+            return new RespEntity(100, "成功上传文件", returnFile);
 
         } catch (IOException | NoSuchAlgorithmException ex) {
             ex.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
+            return new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), "上传文件失败", ex.getMessage());
         }
     }
 
@@ -104,22 +108,27 @@ public class FileController {
     @PostMapping("/uploads")
     public RespEntity handleFileUpload(@RequestParam("files") MultipartFile[] files) {
 
+        File returnFile = null;
+        List<File> fileList = new ArrayList<>();
+
         try {
             for (MultipartFile file : files) {
                 File f = new File(file.getOriginalFilename(), file.getContentType(), file.getSize(), new Binary(file.getBytes()));
                 f.setMd5(MD5Util.getMD5(file.getInputStream()));
-
-                log.info("<file-server>: upload file -> {}", file.getOriginalFilename() + file.getContentType() + file.getSize() + file.getBytes());
+                f.setUploadDate(new Date());
                 log.info("<file-server>: upload file -> {}", f);
-
-                fileService.saveFile(f);
+                returnFile = fileService.saveFile(f);
+                String path = serverAddress + ":" + serverPort + "/files/" + returnFile.getId();
+                returnFile.setPath(path);
+                log.info("<file-server>: insert into file -> {}", returnFile);
+                fileList.add(returnFile);
             }
         } catch (IOException | NoSuchAlgorithmException ex) {
             ex.printStackTrace();
             return new RespEntity(500, "批量上传文件失败");
         }
 
-        return new RespEntity(100, "批量上传文件成功");
+        return new RespEntity(100, "批量上传文件成功", fileList);
     }
 
     /**

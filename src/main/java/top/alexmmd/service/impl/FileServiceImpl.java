@@ -54,7 +54,6 @@ public class FileServiceImpl implements FileService {
      */
     @Override
     public File saveFile(File f) {
-        log.info("<file-server>: insert into file -> {}", f);
         return fileRepository.save(f);
     }
 
