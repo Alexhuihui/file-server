@@ -40,6 +40,9 @@ public class FileController {
     @Value("${server.port}")
     private String serverPort;
 
+    @Value("${server.servlet.context-path}")
+    private String contextPath;
+
 
     public FileController(FileService fileService) {
         this.fileService = fileService;
@@ -87,7 +90,7 @@ public class FileController {
             log.info("<file-server>: upload file -> {}", f);
 
             returnFile = fileService.saveFile(f);
-            String path = serverAddress + ":" + serverPort + "/files/" + returnFile.getId();
+            String path = serverAddress + ":" + serverPort + contextPath + "/files/" + returnFile.getId();
             returnFile.setPath(path);
             log.info("<file-server>: insert into file -> {}", returnFile);
 
@@ -118,7 +121,7 @@ public class FileController {
                 f.setUploadDate(new Date());
                 log.info("<file-server>: upload file -> {}", f);
                 returnFile = fileService.saveFile(f);
-                String path = serverAddress + ":" + serverPort + "/files/" + returnFile.getId();
+                String path = serverAddress + ":" + serverPort + contextPath + "/files/" + returnFile.getId();
                 returnFile.setPath(path);
                 log.info("<file-server>: insert into file -> {}", returnFile);
                 fileList.add(returnFile);
