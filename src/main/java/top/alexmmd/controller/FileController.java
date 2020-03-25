@@ -90,7 +90,7 @@ public class FileController {
             log.info("<file-server>: upload file -> {}", f);
 
             returnFile = fileService.saveFile(f);
-            String path = serverAddress + ":" + serverPort + contextPath + "/files/" + returnFile.getId();
+            String path = serverAddress + contextPath + "/files/" + returnFile.getId();
             returnFile.setPath(path);
             log.info("<file-server>: insert into file -> {}", returnFile);
 
@@ -121,7 +121,7 @@ public class FileController {
                 f.setUploadDate(new Date());
                 log.info("<file-server>: upload file -> {}", f);
                 returnFile = fileService.saveFile(f);
-                String path = serverAddress + ":" + serverPort + contextPath + "/files/" + returnFile.getId();
+                String path = serverAddress + contextPath + "/files/" + returnFile.getId();
                 returnFile.setPath(path);
                 log.info("<file-server>: insert into file -> {}", returnFile);
                 fileList.add(returnFile);
